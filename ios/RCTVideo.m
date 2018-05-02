@@ -396,6 +396,13 @@ static NSString *const timedMetadata = @"timedMetadata";
             orientation = @"portrait";
         }
 
+        // TODO make it configurable to select a preferred subtitle language and turn them on/off
+        AVMediaSelectionGroup *subtitleGroup = [_playerItem.asset mediaSelectionGroupForMediaCharacteristic:AVMediaCharacteristicLegible];
+        NSArray<AVMediaSelectionOption *> *subtitles = [AVMediaSelectionGroup mediaSelectionOptionsFromArray:[subtitleGroup options] filteredAndSortedAccordingToPreferredLanguages:[NSLocale preferredLanguages]];
+        if (subtitles.count > 0) {
+          [_playerItem selectMediaOption:[subtitles objectAtIndex:0] inMediaSelectionGroup:subtitleGroup];
+        }
+
       if(self.onVideoLoad) {
           self.onVideoLoad(@{@"duration": [NSNumber numberWithFloat:duration],
                              @"currentTime": [NSNumber numberWithFloat:CMTimeGetSeconds(_playerItem.currentTime)],
