@@ -22,18 +22,6 @@ static int const RCTVideoUnset = -1;
     #define DebugLog(...) (void)0
 #endif
 
-+ (NSDateFormatter *)dateFormatter {
-  static NSDateFormatter *formatter;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    formatter = [NSDateFormatter new];
-    formatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
-    formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
-    formatter.timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
-  });
-  return formatter;
-}
-
 @implementation RCTVideo
 {
   AVPlayer *_player;
@@ -82,6 +70,18 @@ static int const RCTVideoUnset = -1;
 #if __has_include(<react-native-video/RCTVideoCache.h>)
   RCTVideoCache * _videoCache;
 #endif
+}
+
++ (NSDateFormatter *)dateFormatter {
+  static NSDateFormatter *formatter;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    formatter = [NSDateFormatter new];
+    formatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
+    formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+    formatter.timeZone = [NSTimeZone timeZoneWithName:@"UTC"];
+  });
+  return formatter;
 }
 
 - (instancetype)initWithEventDispatcher:(RCTEventDispatcher *)eventDispatcher
@@ -256,8 +256,8 @@ static int const RCTVideoUnset = -1;
   }
 
   NSString *currentDate;
-  if (_player.currentDate != nil) {
-    currentDate = [dateFormatter stringFromDate:currentDate];
+  if (_player.currentItem != nil && _player.currentItem.currentDate != nil) {
+    currentDate = [RCTVideo.dateFormatter stringFromDate:_player.currentItem.currentDate];
   }
   CMTime currentTime = _player.currentTime;
   const Float64 duration = CMTimeGetSeconds(playerDuration);
@@ -267,7 +267,7 @@ static int const RCTVideoUnset = -1;
 
   if( currentTimeSecs >= 0 && self.onVideoProgress) {
     self.onVideoProgress(@{
-                           @"currentDate": currentDate,
+                           @"currentDate": currentDate ?: [NSNull null],
                            @"currentTime": [NSNumber numberWithFloat:currentTimeSecs],
                            @"playableDuration": [self calculatePlayableDuration],
                            @"atValue": [NSNumber numberWithLongLong:currentTime.value],
